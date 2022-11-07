@@ -83,7 +83,7 @@ class CloudflareService implements SingletonInterface
 
         if ($request === 'GET') {
             $data = $this->sendHttpRequest($request, $url, $headers, $parameters);
-            if ($data['success'] && $data['result_info']['total_pages'] > 1) {
+            if ($data['success'] && $this->getTotalPagesOfHttpRequest($data) > 1) {
                 $accumulatedData = $data;
                 for ($i = $data['result_info']['page'] + 1; $i <= $data['result_info']['total_pages']; $i++) {
                     $nextParameters = $parameters;
@@ -104,6 +104,15 @@ class CloudflareService implements SingletonInterface
         }
 
         return $data;
+    }
+
+    protected function getTotalPagesOfHttpRequest($data): int
+    {
+        if (isset($data['result_info'])) {
+            return $data['result_info']['total_pages'] ?? 0;
+        }
+
+        return 0;
     }
 
     /**
@@ -164,7 +173,7 @@ class CloudflareService implements SingletonInterface
         curl_setopt($ch, CURLOPT_FORBID_REUSE, 1);
         curl_setopt($ch, CURLOPT_TIMEOUT, 15);
 
-        if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['curlProxyServer']) {
+        if (isset($GLOBALS['TYPO3_CONF_VARS']['SYS']['curlProxyServer'])) {
             curl_setopt($ch, CURLOPT_PROXY, $GLOBALS['TYPO3_CONF_VARS']['SYS']['curlProxyServer']);
 
             if ($GLOBALS['TYPO3_CONF_VARS']['SYS']['curlProxyTunnel']) {
